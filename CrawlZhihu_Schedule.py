@@ -14,7 +14,7 @@ import pandas as pd
 from selenium import webdriver
 
 # 读取代理域名
-f = open('./ProxyDomain.txt', )
+f = open('代理域名.txt', )
 a = []
 for i in f.readlines():
     a.append(i.strip('\n'))
@@ -51,7 +51,7 @@ class CrawlZhihuHostList():
         time.sleep(50)
 
     def DuplicateRemoval(self, url):
-        hotLink = pd.read_csv('PriorEvent.csv', usecols=[2])
+        hotLink = pd.read_csv('事件顺序.csv', usecols=[2])
         hotLink_list = np.array(hotLink).tolist()
         count = hotLink_list.count([url])
         return count
@@ -143,18 +143,18 @@ class CrawlZhihuHostList():
         df = pd.DataFrame(rows)
         output_columns = ["hotId", "hotPriorId", "hotTime", "hotLink", "hotTitle", "hotContent"]
         try:
-            df.to_csv("./ZhiHuHostList.csv", mode="a", columns=output_columns, encoding='utf-8', index=False, header=False)
+            df.to_csv("./知乎热榜.csv", mode="a", columns=output_columns, encoding='utf-8', index=False, header=False)
         except:
             print("本次没有新数据")
         # 3.保存事件发展顺序
         order_columns = ["hotId", "hotPriorId", "hotLink"]
         try:
-            df.to_csv("./PriorEvent.csv", mode="a", columns=order_columns, encoding='utf-8', index=False, header=False)
+            df.to_csv("./事件顺序.csv", mode="a", columns=order_columns, encoding='utf-8', index=False, header=False)
         except:
             print("本次没有新数据")
         # 4.打日志记录
         df_log = pd.DataFrame({"SavaTime": ["在" + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + "爬取了" + str(self.n + 1) + "条新数据"]})
-        df_log.to_csv("./log.txt", mode="a", encoding='utf-8', index=False, header=False)
+        df_log.to_csv("./日志.txt", mode="a", encoding='utf-8', index=False, header=False)
         # 关闭并退出
         print("sucessfully!  Crawled", self.n + 1, "pieces of data.")
         self.web.close()
