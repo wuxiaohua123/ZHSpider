@@ -85,12 +85,9 @@ class CrawlZhihuHostList():
                     '$..entities.questions..excerpt')[0]
         except:
             content = ''
-        try:
-            id = jsonpath.jsonpath(
-                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                '$..entities.questions..id')[0]
-        except:
-            id = ''
+        # 注意这里的 id 要取 url 的最后面的数字
+        url_split = url.split('/')
+        id = url_split[len(url_split) - 1]
         self.dict1[self.n] = {}
         self.dict1[self.n]['hotLink'] = r.url
         self.dict1[self.n]['hotId'] = id
@@ -107,7 +104,7 @@ class CrawlZhihuHostList():
                 # 找到当前事件的下标
                 i = 0
                 for col in cols:
-                    if (id == int(col['id'])):
+                    if (id == col['id']):
                         break
                     i += 1
                 time = str(datetime.fromtimestamp(cols[i]['created']))
