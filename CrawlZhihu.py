@@ -13,7 +13,7 @@ import pandas as pd
 from selenium import webdriver
 
 # 读取代理域名
-f = open('代理域名.txt', )
+f = open('./代理域名.txt', )
 a = []
 for i in f.readlines():
     a.append(i.strip('\n'))
@@ -93,35 +93,52 @@ class CrawlZhihuHostList():
         self.dict1[self.n]['hotTitle'] = title
         self.dict1[self.n]['hotContent'] = content
         print("链接:", r.url, "ID:", id, "标题:", title, "内容:", content)
-        try:
-            if jsonpath.jsonpath(
-                    json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                    '$..events'):
-                cols = jsonpath.jsonpath(
-                    json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                    '$..events')[0]
-                # 找到当前事件的下标
-                i = 0
-                for col in cols:
-                    if (id == col['id']):
-                        break
-                    i += 1
-                time = str(datetime.fromtimestamp(cols[i]['created']))
-                prior_node_id = ''
+        if jsonpath.jsonpath(
+                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
+                '$..events'):
+            cols = jsonpath.jsonpath(
+                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
+                '$..events')[0]
+            time = str(datetime.fromtimestamp(cols[0]['created']))
+            prior_node_id = cols[1]['id']
+            self.dict1[self.n]['hotTime'] = time
+            self.dict1[self.n]['hotPriorId'] = prior_node_id
+            print("时间:", time, "前事件ID:", prior_node_id)
+            # 3.爬取前馈事件
+            for i in range(1, len(cols)):
+                self.n += 1
+                self.dict1[self.n] = {}
+                url1 = cols[i]['url']
+                id1 = cols[i]['id']
+                r1 = requests.get(url1, headers = headers)
                 try:
-                    prior_node_id = cols[i + 1]['id']
+                    title1 = jsonpath.jsonpath(json.loads(
+                        re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[
+                            0]), '$..entities.questions..title')[0]
                 except:
-                    prior_node_id = '' #无前事件
-                self.dict1[self.n]['hotTime'] = time
-                self.dict1[self.n]['hotPriorId'] = prior_node_id
-                print("时间:", time, "前事件ID:", prior_node_id)
-                # 3.爬取前馈事件
-                if (i < len(cols) - 1):
-                    self.CrawHotOne(cols[i + 1]['url'])
-            else:
-                self.dict1[self.n]['hotPriorId'] = ''
-                self.dict1[self.n]['hotTime'] = ''
-        except:
+                    title1 = ''
+                try:
+                    content1 = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(
+                        re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]),
+                        '$..entities.questions..detail')[
+                        0]))
+                    if content1 == '':
+                        content1 = jsonpath.jsonpath(json.loads(
+                            re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[
+                                0]), '$..entities.questions..excerpt')[0]
+                except:
+                    content1 = ''
+                self.dict1[self.n]['hotLink'] = url1
+                self.dict1[self.n]['hotId'] = id1
+                self.dict1[self.n]['hotTitle'] = title1
+                self.dict1[self.n]['hotContent'] = content1
+                print("链接:", url1, "ID:", id1, "标题:", title1, "内容:", content1)
+                time1 = str(datetime.fromtimestamp(cols[i]['created']))
+                prior_node_id1 = cols[i + 1]['id'] if i < len(cols) - 1 else ''
+                self.dict1[self.n]['hotTime'] = time1
+                self.dict1[self.n]['hotPriorId'] = prior_node_id1
+                print("时间:", time1, "前事件ID:", prior_node_id1)
+        else:
             self.dict1[self.n]['hotPriorId'] = ''
             self.dict1[self.n]['hotTime'] = ''
 
