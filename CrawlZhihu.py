@@ -45,7 +45,6 @@ class CrawlZhihuHostList():
         time.sleep(5)
         html = etree.HTML(self.web.page_source)
         urls = html.xpath('//*[@id="TopstoryContent"]/div/div/div[1]/section/div[2]/a/@href')
-        # urls.append('https://www.zhihu.com/question/564562805')
         print('热榜数量', len(urls))
         self.CrawHotList(urls)
         time.sleep(50)
@@ -112,7 +111,7 @@ class CrawlZhihuHostList():
                 try:
                     prior_node_id = cols[i + 1]['id']
                 except:
-                    prior_node_id = ''
+                    prior_node_id = '' #无前事件
                 self.dict1[self.n]['hotTime'] = time
                 self.dict1[self.n]['hotPriorId'] = prior_node_id
                 print("时间:", time, "前事件ID:", prior_node_id)
