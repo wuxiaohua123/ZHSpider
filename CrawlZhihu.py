@@ -66,7 +66,6 @@ class CrawlZhihuHostList():
         if (count > 0):
             return
         # 2.爬取当前事件
-        self.n += 1
         headers = {'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'}
         r = requests.get(url, headers=headers)
         try:
@@ -90,6 +89,7 @@ class CrawlZhihuHostList():
         # 注意这里的 id 要取 url 的最后面的数字
         url_split = url.split('/')
         id = url_split[len(url_split) - 1]
+        self.n += 1
         self.dict1[self.n] = {}
         self.dict1[self.n]['hotLink'] = r.url
         self.dict1[self.n]['hotId'] = id
@@ -109,10 +109,13 @@ class CrawlZhihuHostList():
             print("时间:", hotTime, "前事件ID:", prior_node_id)
             # 3.爬取前馈事件
             for i in range(1, len(cols)):
-                self.n += 1
-                self.dict1[self.n] = {}
                 url1 = cols[i]['url']
                 id1 = cols[i]['id']
+                # 3.1 热搜去重
+                count1 = self.DuplicateRemoval(url1)
+                if (count1 > 0):
+                    return
+                # 3.2 爬取事件
                 r1 = requests.get(url1, headers = headers)
                 time.sleep(1)
                 try:
@@ -132,6 +135,8 @@ class CrawlZhihuHostList():
                                 0]), '$..entities.questions..excerpt')[0]
                 except:
                     content1 = ''
+                self.n += 1
+                self.dict1[self.n] = {}
                 self.dict1[self.n]['hotLink'] = url1
                 self.dict1[self.n]['hotId'] = id1
                 self.dict1[self.n]['hotTitle'] = title1
