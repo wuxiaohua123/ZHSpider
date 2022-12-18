@@ -64,44 +64,37 @@ class CrawlZhihuHostList():
         # 1.热搜去重
         count = self.DuplicateRemoval(url)
         if (count > 0):
+            print("热搜", url, "已爬取过")
             return
         # 2.爬取当前事件
         headers = {'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'}
         r = requests.get(url, headers=headers)
         try:
-            title = jsonpath.jsonpath(
-                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                '$..entities.questions..title')
+            title = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..entities.questions..title')
         except:
             title = ''
         if title:
             title = title[0]
         try:
-            content = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(
-                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                '$..entities.questions..detail')[0]))
+            content = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..entities.questions..detail')[0]))
             if content == '':
-                content = jsonpath.jsonpath(
-                    json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                    '$..entities.questions..excerpt')[0]
+                content = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..entities.questions..excerpt')[0]
         except:
             content = ''
         # 注意这里的 id 要取 url 的最后面的数字
         url_split = url.split('/')
         id = url_split[len(url_split) - 1]
-        self.n += 1
-        self.dict1[self.n] = {}
-        self.dict1[self.n]['hotLink'] = r.url
-        self.dict1[self.n]['hotId'] = id
-        self.dict1[self.n]['hotTitle'] = title
-        self.dict1[self.n]['hotContent'] = content
         print("链接:", r.url, "ID:", id, "标题:", title, "内容:", content)
-        if jsonpath.jsonpath(
-                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                '$..events'):
-            cols = jsonpath.jsonpath(
-                json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]),
-                '$..events')[0]
+        if jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events'):
+            # 有前馈事件ID才保存当前事件
+            self.n += 1
+            self.dict1[self.n] = {}
+            self.dict1[self.n]['hotLink'] = r.url
+            self.dict1[self.n]['hotId'] = id
+            self.dict1[self.n]['hotTitle'] = title
+            self.dict1[self.n]['hotContent'] = content
+            # 取当前事件的时间和前馈事件ID
+            cols = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events')[0]
             hotTime = str(datetime.fromtimestamp(cols[0]['created']))
             prior_node_id = cols[1]['id']
             self.dict1[self.n]['hotTime'] = hotTime
@@ -114,25 +107,19 @@ class CrawlZhihuHostList():
                 # 3.1 热搜去重
                 count1 = self.DuplicateRemoval(url1)
                 if (count1 > 0):
+                    print("热搜", url1, "已爬取过")
                     return
                 # 3.2 爬取事件
                 r1 = requests.get(url1, headers = headers)
                 time.sleep(1)
                 try:
-                    title1 = jsonpath.jsonpath(json.loads(
-                        re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[
-                            0]), '$..entities.questions..title')[0]
+                    title1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..title')[0]
                 except:
                     title1 = ''
                 try:
-                    content1 = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(
-                        re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]),
-                        '$..entities.questions..detail')[
-                        0]))
+                    content1 = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..detail')[0]))
                     if content1 == '':
-                        content1 = jsonpath.jsonpath(json.loads(
-                            re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[
-                                0]), '$..entities.questions..excerpt')[0]
+                        content1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..excerpt')[0]
                 except:
                     content1 = ''
                 self.n += 1
@@ -148,8 +135,7 @@ class CrawlZhihuHostList():
                 self.dict1[self.n]['hotPriorId'] = prior_node_id1
                 print("时间:", hotTime1, "前事件ID:", prior_node_id1)
         else:
-            self.dict1[self.n]['hotPriorId'] = ''
-            self.dict1[self.n]['hotTime'] = ''
+            print("热搜", r.url, "没有hotPriorId，因此不保存")
 
     def CrawHotList(self, urls):
         # 1.读取已有Url列表
