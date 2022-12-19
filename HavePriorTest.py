@@ -18,10 +18,11 @@ def OldlyEventId():
     oldlyEventId = []
     for index, row in dataframe.iterrows():
         if(np.isnan(row['hotPriorId'])):
-            if(row['hotId'].isdigit() and float(row['hotId']) in hotPriorId):
+            if(row['hotId'] in hotPriorId):
                 # print(index, row['hotId'], row['hotPriorId'], row['hotLink'])
                 oldlyEventId.append(row['hotLink'])
     print(len(oldlyEventId))
+    print(oldlyEventId)
 
 
 def LastlyEventId():
@@ -31,10 +32,11 @@ def LastlyEventId():
     for index, row in dataframe.iterrows():
         # 最新事件 = 有过去事件 + 无后续事件
         if(not np.isnan(row['hotPriorId'])):
-            if(float(row['hotId']) not in hotPriorId):
+            if(row['hotId'] not in hotPriorId):
                 # print(index, row['hotId'], row['hotPriorId'], row['hotLink'])
                 LastlyEventId.append(row['hotLink'])
     print(len(LastlyEventId))
+    print(LastlyEventId)
 
 
 def IdEqualPriorId():

@@ -46,8 +46,7 @@ class CrawlZhihuHostList():
         self.web.switch_to.window(self.web.window_handles[0])
         time.sleep(5)
         html = etree.HTML(self.web.page_source)
-        # urls = html.xpath('//*[@id="TopstoryContent"]/div/div/div[1]/section/div[2]/a/@href')
-        urls = ['https://www.zhihu.com/question/572116633']
+        urls = html.xpath('//*[@id="TopstoryContent"]/div/div/div[1]/section/div[2]/a/@href')
         print('热榜数量', len(urls))
         self.CrawHotList(urls)
         time.sleep(50)
