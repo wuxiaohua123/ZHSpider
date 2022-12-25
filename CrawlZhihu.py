@@ -84,48 +84,51 @@ class CrawlZhihuHostList():
         url_split = url.split('/')
         id = url_split[len(url_split) - 1]
         # 有前馈事件ID时才保存热搜
-        if jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events'):
-            cols = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events')[0]
-            # 查询当前热搜所在下标
-            start = 0
-            for i in range(0, len(cols)):
-                if (cols[i]['url'] == r.url):
-                    start = i
-                    break
-            # 3.爬取前馈事件
-            for i in range(start, len(cols)):
-                url1 = cols[i]['url']
-                id1 = cols[i]['id']
-                # 3.1 热搜去重
-                count1 = self.DuplicateRemoval(url1)
-                if (count1 > 0):
-                    return
-                # 3.2 爬取事件
-                r1 = requests.get(url1, headers = headers)
-                time.sleep(1)
-                try:
-                    title1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..title')[0]
-                except:
-                    title1 = ''
-                try:
-                    content1 = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..detail')[0]))
-                    if content1 == '':
-                        content1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..excerpt')[0]
-                except:
-                    content1 = ''
-                self.n += 1
-                self.dict1[self.n] = {}
-                self.dict1[self.n]['hotLink'] = url1
-                self.dict1[self.n]['hotId'] = id1
-                self.dict1[self.n]['hotTitle'] = title1
-                self.dict1[self.n]['hotContent'] = content1
-                print("链接:", url1, "ID:", id1, "标题:", title1, "内容:", content1)
-                hotTime1 = str(datetime.fromtimestamp(cols[i]['created']))
-                prior_node_id1 = cols[i + 1]['id'] if i < len(cols) - 1 else ''
-                self.dict1[self.n]['hotTime'] = hotTime1
-                self.dict1[self.n]['hotPriorId'] = prior_node_id1
-                print("时间:", hotTime1, "前事件ID:", prior_node_id1)
-        else:
+        try:
+            if jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events'):
+                cols = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r.text)[0]), '$..events')[0]
+                # 查询当前热搜所在下标
+                start = 0
+                for i in range(0, len(cols)):
+                    if (cols[i]['url'] == r.url):
+                        start = i
+                        break
+                # 3.爬取前馈事件
+                for i in range(start, len(cols)):
+                    url1 = cols[i]['url']
+                    id1 = cols[i]['id']
+                    # 3.1 热搜去重
+                    count1 = self.DuplicateRemoval(url1)
+                    if (count1 > 0):
+                        return
+                    # 3.2 爬取事件
+                    r1 = requests.get(url1, headers = headers)
+                    time.sleep(1)
+                    try:
+                        title1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..title')[0]
+                    except:
+                        title1 = ''
+                    try:
+                        content1 = ''.join(re.findall(r'<p>(.*?)</p>', jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..detail')[0]))
+                        if content1 == '':
+                            content1 = jsonpath.jsonpath(json.loads(re.findall(r'<script id="js-initialData" type="text/json">(.*?)</script>', r1.text)[0]), '$..entities.questions..excerpt')[0]
+                    except:
+                        content1 = ''
+                    self.n += 1
+                    self.dict1[self.n] = {}
+                    self.dict1[self.n]['hotLink'] = url1
+                    self.dict1[self.n]['hotId'] = id1
+                    self.dict1[self.n]['hotTitle'] = title1
+                    self.dict1[self.n]['hotContent'] = content1
+                    print("链接:", url1, "ID:", id1, "标题:", title1, "内容:", content1)
+                    hotTime1 = str(datetime.fromtimestamp(cols[i]['created']))
+                    prior_node_id1 = cols[i + 1]['id'] if i < len(cols) - 1 else ''
+                    self.dict1[self.n]['hotTime'] = hotTime1
+                    self.dict1[self.n]['hotPriorId'] = prior_node_id1
+                    print("时间:", hotTime1, "前事件ID:", prior_node_id1)
+            else:
+                print("链接:", r.url, "ID:", id, "标题:", title, "内容:", content)
+        except:
             print("链接:", r.url, "ID:", id, "标题:", title, "内容:", content)
 
     def CrawHotList(self, urls):
